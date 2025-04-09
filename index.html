@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>IoT Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    canvas { max-width: 800px; }
+  </style>
+</head>
+<body>
+  <h2>Temperature & Humidity Dashboard</h2>
+  <canvas id="sensorChart"></canvas>
+
+  <script>
+    async function fetchData() {
+      const res = await fetch("/api/data");
+      const data = await res.json();
+      const labels = data.map(d => new Date(d.timestamp).toLocaleTimeString()).reverse();
+      const temp = data.map(d => d.temperature).reverse();
+      const humid = data.map(d => d.humidity).reverse();
+
+      return { labels, temp, humid };
+    }
+
+    async function drawChart() {
+      const { labels, temp, humid } = await fetchData();
+
+      const ctx = document.getElementById("sensorChart").getContext("2d");
+      if (window.myChart) window.myChart.destroy();
+
+      window.myChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "Temperature (°C)",
+              data: temp,
+              borderColor: "red",
+              fill: false
+            },
+            {
+              label: "Humidity (%)",
+              data: humid,
+              borderColor: "blue",
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+
+    drawChart();
+    setInterval(drawChart, 5000);
+  </script>
+</body>
+</html>
